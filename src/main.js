@@ -215,11 +215,35 @@ function dispatch(event) {
   // 获取范围 默认为all
   const scope = getScope();
 
+  // 判断时候按下了修饰建
+  function hasPressedModKey(invert = false) {
+    const _modifierVal = [];
+    for (const m in _modifier) {
+      if (m) {
+        _modifierVal.push(_modifier[m]);
+      }
+    }
+    for (let i = 0; i < _downKeys.length; i++) {
+      if (!invert) {
+        if (_modifierVal.includes(_downKeys[i])) return true;
+      } else if (invert) {
+        if (_modifierVal.indexOf(_downKeys[i]) === -1) return true;
+      }
+    }
+    return false;
+  }
+
   // 对任何快捷键都需要做的处理
   if (asterisk) {
     for (let i = 0; i < asterisk.length; i++) {
       if (asterisk[i].scope === scope && ((event.type === 'keydown' && asterisk[i].keydown) || (event.type === 'keyup' && asterisk[i].keyup))) {
-        eventHandler(event, asterisk[i], scope);
+        // 修饰键盘
+        if (_downKeys.length > 1) {
+          if (hasPressedModKey() && hasPressedModKey(true)) {
+            asterisk[i].code = [..._downKeys];
+            eventHandler(event, asterisk[i], scope);
+          }
+        }
       }
     }
   }

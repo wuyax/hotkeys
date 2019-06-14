@@ -10,6 +10,26 @@
 
 'use strict';
 
+function _toConsumableArray(arr) {
+  return _arrayWithoutHoles(arr) || _iterableToArray(arr) || _nonIterableSpread();
+}
+
+function _arrayWithoutHoles(arr) {
+  if (Array.isArray(arr)) {
+    for (var i = 0, arr2 = new Array(arr.length); i < arr.length; i++) arr2[i] = arr[i];
+
+    return arr2;
+  }
+}
+
+function _iterableToArray(iter) {
+  if (Symbol.iterator in Object(iter) || Object.prototype.toString.call(iter) === "[object Arguments]") return Array.from(iter);
+}
+
+function _nonIterableSpread() {
+  throw new TypeError("Invalid attempt to spread non-iterable instance");
+}
+
 var isff = typeof navigator !== 'undefined' ? navigator.userAgent.toLowerCase().indexOf('firefox') > 0 : false; // 绑定事件
 
 function addEvent(object, event, method) {
@@ -334,12 +354,40 @@ function dispatch(event) {
   } // 获取范围 默认为all
 
 
-  var scope = getScope(); // 对任何快捷键都需要做的处理
+  var scope = getScope(); // 判断时候按下了修饰建
+
+  function hasPressedModKey() {
+    var invert = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
+    var _modifierVal = [];
+
+    for (var m in _modifier) {
+      if (m) {
+        _modifierVal.push(_modifier[m]);
+      }
+    }
+
+    for (var i = 0; i < _downKeys.length; i++) {
+      if (!invert) {
+        if (_modifierVal.includes(_downKeys[i])) return true;
+      } else if (invert) {
+        if (_modifierVal.indexOf(_downKeys[i]) === -1) return true;
+      }
+    }
+
+    return false;
+  } // 对任何快捷键都需要做的处理
+
 
   if (asterisk) {
     for (var i = 0; i < asterisk.length; i++) {
       if (asterisk[i].scope === scope && (event.type === 'keydown' && asterisk[i].keydown || event.type === 'keyup' && asterisk[i].keyup)) {
-        eventHandler(event, asterisk[i], scope);
+        // 修饰键盘
+        if (_downKeys.length > 1) {
+          if (hasPressedModKey() && hasPressedModKey(true)) {
+            asterisk[i].code = _toConsumableArray(_downKeys);
+            eventHandler(event, asterisk[i], scope);
+          }
+        }
       }
     }
   } // key 不在_handlers中返回
